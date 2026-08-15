@@ -2,9 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-  <title>Real-Time Facial Expression Detection</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Navarasa Challenge</title>
 
   <!-- face-api.js -->
   <script
@@ -19,67 +18,195 @@
   </script>
 
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
     body {
-      font-family: Arial, sans-serif;
-      max-width: 800px;
-      margin: 0 auto;
-      padding: 30px;
-      text-align: center;
-      background: #f5f5f5;
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      color: #fff;
+      padding:
+        max(8px, env(safe-area-inset-top))
+        max(12px, env(safe-area-inset-right))
+        max(10px, env(safe-area-inset-bottom))
+        max(12px, env(safe-area-inset-left));
+
+      display: flex;
+      flex-direction: column;
+
+      /* Kathakali-inspired dark green / red / gold background */
+      background:
+        radial-gradient(
+          circle at 12% 8%,
+          rgba(178, 28, 28, 0.28),
+          transparent 30%
+        ),
+        radial-gradient(
+          circle at 88% 90%,
+          rgba(210, 163, 46, 0.18),
+          transparent 34%
+        ),
+        linear-gradient(
+          150deg,
+          #0a3327 0%,
+          #051d17 42%,
+          #090d0c 100%
+        );
     }
 
     h1 {
-      margin-bottom: 10px;
+      flex: 0 0 auto;
+      margin: 0 0 2px;
+      text-align: center;
+      font-size: clamp(28px, 4vw, 40px);
+      line-height: 1.05;
+      font-weight: 800;
+      color: #f1c75b;
+      letter-spacing: 0.8px;
+      text-shadow:
+        0 2px 4px rgba(0, 0, 0, 0.85),
+        0 0 10px rgba(241, 199, 91, 0.12);
     }
 
     #status {
-      margin-bottom: 20px;
-      color: #555;
+      flex: 0 0 auto;
+      margin: 0 0 6px;
+      min-height: 52px;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      text-align: center;
+      font-size: clamp(32px, 5.4vw, 48px);
+      line-height: 1;
+      font-weight: 800;
+      color: #fff;
+      text-shadow: 0 2px 6px rgba(0, 0, 0, 0.9);
+    }
+
+    .main-layout {
+      flex: 1 1 auto;
+      min-height: 0;
+
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .video-panel {
+      flex: 0 0 auto;
+      min-height: 0;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     video {
+      display: block;
       width: 100%;
-      max-width: 640px;
+      height: auto;
+      max-height: 47vh;
+
+      object-fit: contain;
+      background: #000;
+
+      border: 3px solid rgba(241, 199, 91, 0.7);
       border-radius: 12px;
-      background: #222;
+
+      box-shadow:
+        0 5px 18px rgba(0, 0, 0, 0.55),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.05);
     }
 
-    .chart-container {
-      max-width: 700px;
-      margin: 30px auto 0;
-      background: white;
-      padding: 20px;
+    .chart-panel {
+      flex: 1 1 auto;
+      min-height: 0;
+
+      padding: 8px 10px 2px;
+
+      background: rgba(0, 0, 0, 0.32);
+      border: 1px solid rgba(241, 199, 91, 0.28);
       border-radius: 12px;
+
+      box-shadow: 0 3px 14px rgba(0, 0, 0, 0.35);
+      overflow: hidden;
+    }
+
+    .chart-wrapper {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      min-height: 0;
+    }
+
+    #emotionChart {
+      width: 100% !important;
+      height: 100% !important;
+    }
+
+    @media (max-height: 850px) {
+      h1 {
+        font-size: 27px;
+      }
+
+      #status {
+        min-height: 40px;
+        margin-bottom: 4px;
+        font-size: 31px;
+      }
+
+      .main-layout {
+        gap: 6px;
+      }
+
+      video {
+        max-height: 43vh;
+      }
+
+      .chart-panel {
+        padding-top: 5px;
+      }
     }
   </style>
 </head>
 
 <body>
+  <h1>Navarasa Challenge</h1>
+  <div id="status">Loading...</div>
 
-  <h1>Facial Expression Detection</h1>
-  <p id="status">Loading models...</p>
+  <div class="main-layout">
+    <div class="video-panel">
+      <video
+        id="video"
+        width="640"
+        height="480"
+        autoplay
+        muted
+        playsinline>
+      </video>
+    </div>
 
-  <video
-    id="video"
-    width="640"
-    height="480"
-    autoplay
-    muted
-    playsinline>
-  </video>
-
-  <div class="chart-container">
-    <canvas id="emotionChart"></canvas>
+    <div class="chart-panel">
+      <div class="chart-wrapper">
+        <canvas id="emotionChart"></canvas>
+      </div>
+    </div>
   </div>
 
   <script>
     window.addEventListener("DOMContentLoaded", async () => {
       const video = document.getElementById("video");
       const status = document.getElementById("status");
-
-      // -------------------------------------------------------
-      // 1. Create Chart.js chart
-      // -------------------------------------------------------
 
       const emotions = [
         "neutral",
@@ -91,6 +218,16 @@
         "surprised"
       ];
 
+      const emotionLabels = [
+        "Neutral",
+        "Happy",
+        "Sad",
+        "Angry",
+        "Fearful",
+        "Disgusted",
+        "Surprised"
+      ];
+
       const ctx = document
         .getElementById("emotionChart")
         .getContext("2d");
@@ -99,37 +236,86 @@
         type: "bar",
 
         data: {
-          labels: emotions,
+          labels: emotionLabels,
 
           datasets: [{
-            label: "Expression probability",
             data: [0, 0, 0, 0, 0, 0, 0],
 
             backgroundColor: [
-              "#607d8b",
-              "#4caf50",
-              "#2196f3",
-              "#f44336",
-              "#9c27b0",
-              "#795548",
-              "#ff9800"
-            ]
+              "#4f8f61",
+              "#e2b93b",
+              "#5279a8",
+              "#c43b31",
+              "#8b5aa5",
+              "#769447",
+              "#df7a2e"
+            ],
+
+            borderColor: [
+              "#8fc49a",
+              "#f1d16e",
+              "#85a8d0",
+              "#ec7166",
+              "#bd8bd0",
+              "#a8c671",
+              "#f0a15d"
+            ],
+
+            borderWidth: 2,
+            borderRadius: 4
           }]
         },
 
         options: {
           responsive: true,
-
+          maintainAspectRatio: false,
           animation: false,
 
+          layout: {
+            padding: {
+              top: 5,
+              left: 5,
+              right: 5,
+              bottom: 0
+            }
+          },
+
           scales: {
+            x: {
+              ticks: {
+                color: "#ffffff",
+                font: {
+                  size: 18,
+                  weight: "bold"
+                },
+                maxRotation: 0,
+                minRotation: 0,
+                autoSkip: false
+              },
+
+              grid: {
+                display: false
+              }
+            },
+
             y: {
               beginAtZero: true,
               max: 1,
 
-              title: {
-                display: true,
-                text: "Probability"
+              ticks: {
+                color: "#dddddd",
+                stepSize: 0.2,
+                font: {
+                  size: 15
+                },
+
+                callback: function(value) {
+                  return Math.round(value * 100) + "%";
+                }
+              },
+
+              grid: {
+                color: "rgba(255, 255, 255, 0.15)"
               }
             }
           },
@@ -137,15 +323,18 @@
           plugins: {
             legend: {
               display: false
+            },
+
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  return Math.round(context.raw * 100) + "%";
+                }
+              }
             }
           }
         }
       });
-
-
-      // -------------------------------------------------------
-      // 2. Load face-api.js models
-      // -------------------------------------------------------
 
       try {
         await Promise.all([
@@ -153,26 +342,20 @@
           faceapi.nets.faceExpressionNet.loadFromUri("./models")
         ]);
 
-        status.textContent = "Models loaded. Starting camera...";
-
-        startCamera();
+        status.textContent = "Starting camera...";
+        await startCamera();
 
       } catch (error) {
         console.error(error);
-
-        status.textContent =
-          "Could not load face-api.js models. Check the /models folder.";
+        status.textContent = "Model load error";
       }
-
-
-      // -------------------------------------------------------
-      // 3. Start webcam
-      // -------------------------------------------------------
 
       async function startCamera() {
         try {
           const stream = await navigator.mediaDevices.getUserMedia({
-            video: true,
+            video: {
+              facingMode: "user"
+            },
             audio: false
           });
 
@@ -180,36 +363,20 @@
 
         } catch (error) {
           console.error(error);
-
-          status.textContent =
-            "Could not access webcam. Please allow camera permission.";
+          status.textContent = "Camera unavailable";
         }
       }
 
-
-      // -------------------------------------------------------
-      // 4. Start detection once video is ready
-      // -------------------------------------------------------
-
       video.addEventListener("playing", () => {
-
-        status.textContent = "Detecting facial expressions...";
-
+        status.textContent = "Looking for face...";
         detectExpressions();
       });
 
-
-      // -------------------------------------------------------
-      // 5. Detection loop
-      // -------------------------------------------------------
-
       async function detectExpressions() {
-
         try {
           const result = await faceapi
             .detectSingleFace(
               video,
-
               new faceapi.TinyFaceDetectorOptions({
                 inputSize: 224,
                 scoreThreshold: 0.5
@@ -217,24 +384,16 @@
             )
             .withFaceExpressions();
 
-
           if (result) {
-
             const expressions = result.expressions;
-
-            // Put probabilities into the same order
-            // as our Chart.js labels.
 
             const values = emotions.map(
               emotion => expressions[emotion]
             );
 
             emotionChart.data.datasets[0].data = values;
-
-            // "none" prevents animation on every update
             emotionChart.update("none");
 
-            // Find the highest-scoring expression
             const dominantEmotion = emotions.reduce(
               (best, emotion) =>
                 expressions[emotion] > expressions[best]
@@ -242,15 +401,17 @@
                   : best
             );
 
+            const displayEmotion =
+              dominantEmotion.charAt(0).toUpperCase() +
+              dominantEmotion.slice(1);
+
             status.textContent =
-              `Detected expression: ${dominantEmotion} ` +
-              `(${(expressions[dominantEmotion] * 100).toFixed(1)}%)`;
+              `${displayEmotion} ` +
+              `(${(expressions[dominantEmotion] * 100).toFixed(0)}%)`;
 
           } else {
+            status.textContent = "No face";
 
-            status.textContent = "No face detected";
-
-            // Reset graph
             emotionChart.data.datasets[0].data =
               emotions.map(() => 0);
 
@@ -261,13 +422,9 @@
           console.error("Detection error:", error);
         }
 
-        // Throttle inference so we don't try to run a model
-        // on every video frame.
         setTimeout(detectExpressions, 150);
       }
-
     });
   </script>
-
 </body>
 </html>
